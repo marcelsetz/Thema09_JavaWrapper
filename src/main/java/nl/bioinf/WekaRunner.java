@@ -1,13 +1,13 @@
 package nl.bioinf;
 
 import weka.classifiers.functions.SMO;
-import weka.core.Instance;
 import weka.core.Instances;
 import weka.core.converters.ConverterUtils.DataSource;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Scanner;
 
 /**
  * Weka Class with WekaRunner class builds model from input file
@@ -23,6 +23,7 @@ public class WekaRunner {
     public void start(String datafile) {
         String unknownFile = "testdata/Unknown_data_pdac.arff";
         try {
+            System.out.println("\n---------------------------------------------------------------------------------\n\n");
             // Building the model
             Instances instances = loadArff(datafile);
             // J48 is public class weka.classifiers.trees
@@ -33,6 +34,14 @@ public class WekaRunner {
             // Using the model
             Instances unknownInstances = loadArff(unknownFile);
             classifyNewInstance(fromFile, unknownInstances);
+
+            System.out.println("\nThe file is stored in the testdata folder." +
+                    "\nThe classified instances are in the last column of the newly created file. \n" +
+                    "If there is a 1, it means the patient probably has PDAC. With a 2, the patient has \n" +
+                    "pancreatic conditions that are non-cancerous. And with a 3, the person seems to be healthy.\n" +
+                    "(Not 100% guaranteed)\n\n");
+            System.out.println("----------------------------------------------------------------------------------");
+
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -53,8 +62,27 @@ public class WekaRunner {
             labeled.instance(i).setClassValue(clsLabel);
         }
 
+        System.out.println("Please, provide a name for the output file where the classified data will be stored");
+        Scanner scanner = new Scanner(System.in);
+        String outputFile = "testdata/" + scanner.next();
+
         try {
-            File classifiedFile = new File("testdata/labeled_data_pdac.arff");
+            int index = outputFile.lastIndexOf('.');
+            while (index <= 0) {
+                System.out.println("Please enter a filename with .arff extension. Example: Labeled.arff");
+                outputFile = "testdata/" + scanner.next();
+
+                index = outputFile.lastIndexOf('.');
+            }
+
+
+            String extension = outputFile.substring(index + 1);
+            while (!extension.equals("arff")) {
+                System.out.println("Please enter a filename with .arff extension. Example: Labeled.arff");
+                outputFile = "testdata/" + scanner.next();
+            }
+
+            File classifiedFile = new File(outputFile);
             if (classifiedFile.createNewFile()) {
                 System.out.println("File created: " + classifiedFile.getName());
             } else {
@@ -66,10 +94,10 @@ public class WekaRunner {
         }
 
         try {
-            FileWriter myWriter = new FileWriter("testdata/labeled_data_pdac.arff");
+            FileWriter myWriter = new FileWriter(outputFile);
             myWriter.write(String.valueOf(labeled));
             myWriter.close();
-            System.out.println("Successfully wrote to the file.");
+            System.out.println("Successfully exported classified instances to the file.");
         } catch (IOException e) {
             System.out.println("An error occurred.");
             e.printStackTrace();
